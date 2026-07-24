@@ -1,0 +1,2765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Fogo de Chão</title>
+<style>
+:root {
+    --black: #000;
+    --dark-gray: #3f3f3f;
+    --medium-gray: #777;
+    --light-gray: #bdbdbd;
+    --very-light-gray: #ececec;
+    --white: #fff;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--black);
+    background: var(--white);
+}
+header {
+    padding: 28px 32px;
+    color: var(--white);
+    background: var(--black);
+}
+header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+header p {
+    margin: 8px 0 0;
+    color: #ccc;
+}
+.tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 24px;
+    background: var(--white);
+    border-bottom: 1px solid var(--medium-gray);
+}
+.tab {
+    padding: 10px 14px;
+    border: 1px solid var(--black);
+    background: var(--white);
+    color: var(--black);
+    font-weight: 700;
+    cursor: pointer;
+}
+.tab:hover,
+.tab.active {
+    color: var(--white);
+    background: var(--black);
+}
+main {
+    max-width: 1500px;
+    margin: auto;
+    padding: 24px;
+}
+.section-panel { display: none; }
+.section-panel.active { display: block; }
+.section-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    border-bottom: 3px solid var(--black);
+}
+.section-header h2 {
+    margin: 0 0 10px;
+    font-size: 26px;
+}
+.section-header p {
+    margin: 0 0 12px;
+    color: #555;
+}
+.legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 14px;
+}
+.legend-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    margin-left: 10px;
+    border: 1px solid var(--black);
+}
+.verybad { background: var(--black); }
+.bad { background: var(--dark-gray); }
+.regular { background: var(--medium-gray); }
+.good { background: var(--light-gray); }
+.excellent { background: var(--white); }
+.chart-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 26px;
+    min-height: 315px;
+    padding: 18px 10px 12px;
+    overflow-x: auto;
+    border-left: 1px solid var(--black);
+    border-bottom: 1px solid var(--black);
+}
+.metric-group {
+    min-width: 235px;
+    text-align: center;
+}
+.bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+    height: 240px;
+}
+.bar-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    width: 38px;
+    height: 240px;
+}
+.bar-value {
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+.bar {
+    width: 32px;
+    border: 2px solid var(--black);
+}
+.bar-label {
+    height: 46px;
+    margin-top: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    transform: rotate(-38deg);
+}
+.metric-label {
+    min-height: 42px;
+    margin-top: 8px;
+    font-weight: 700;
+}
+.comments-title {
+    margin-top: 36px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--black);
+}
+.comments-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+.comment-column {
+    border: 1px solid var(--black);
+    background: var(--white);
+}
+.comment-column h3 {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 12px 14px;
+    color: var(--white);
+    background: var(--black);
+}
+.comment-column.neutral h3 {
+    background: var(--medium-gray);
+}
+.comment-column.positive h3 {
+    color: var(--black);
+    background: var(--white);
+    border-bottom: 2px solid var(--black);
+}
+.comment-column ul {
+    max-height: 560px;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+}
+.comment-column li {
+    padding: 12px 14px;
+    line-height: 1.35;
+    border-bottom: 1px solid #ccc;
+}
+.comment-column li:last-child {
+    border-bottom: 0;
+}
+.comment-source {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.empty {
+    color: #777;
+    font-style: italic;
+}
+@media (max-width: 900px) {
+    .comments-grid { grid-template-columns: 1fr; }
+    .section-header { display: block; }
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>Encuesta de experiencia — Fogo de Chão</h1>
+    <p>Almuerzo del jueves · 36 respuestas · Resultados por sección</p>
+</header>
+<nav class="tabs"><button type="button" class="tab active" data-target="section-0">Recepción</button><button type="button" class="tab" data-target="section-1">Atención y servicio</button><button type="button" class="tab" data-target="section-2">Market Table</button><button type="button" class="tab" data-target="section-3">Churrasco</button><button type="button" class="tab" data-target="section-4">Ambiente e instalaciones</button><button type="button" class="tab" data-target="section-5">Experiencia general</button></nav>
+<main>
+        <section id="section-0" class="section-panel active">
+            <div class="section-header">
+                <h2>Recepción</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar regular" style="height:14px"
+                         title="Regular: 2"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:41px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">28</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 28"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Recibimiento</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>19</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Entrada muy elegante, muy cordiales todos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy amable excelente atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Las súper educadas y súper atentas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Estuvo muy amables
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Me encanta
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                La chica un poco tímida pero muy amable
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Excelente atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Súper atentos siempre
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Una persona muy atenta y pendiente de las necesidades del cliente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Excelente atencion
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Un espacio muy agradable
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Un poco desordenadas pero con excelente ánimo y la mejor disposición
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy atentos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Excelente recibimiento
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Excelente bien atentos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Hubiera sido bonito ver a las chicas un poquito mas presentables o uniformadas.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Fue una buena experiencia. El ingreso fue rápido y recibí una atención amable.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>16</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Exelente calidad de personas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                No muy ordenada, varias personas en la bienvenida
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy bueno. Muy buena recepción y recibimiento.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Buena atención y cortesía del personal
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Se ven feos los tatuajes en el cuello
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Un poco desordenada porque había mucha gente esperando clientes
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy ordenado
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Bonitas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Buena,
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy buen recibimiento y buena información
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Se ven feos los tatuajes en el cuellon de una anfitriona
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Estuvo enredado la asignación de mesas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Todo bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                Muy buena, tuvieron fluidez a la hora de hablar si se pego un poco la muchacha pero siento que es normal porque es la primera vez
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>1</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de recepción</span>
+                El ingreso fue un poco lento.
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        
+        <section id="section-1" class="section-panel">
+            <div class="section-header">
+                <h2>Atención y servicio</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar regular" style="height:0px"
+                         title="Regular: 0"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">4</div>
+                    <div class="bar good" style="height:24px"
+                         title="Bueno: 4"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">32</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 32"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Atención y servicio</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>26</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy atentos con buena facilidad converzacion y conocimiento del concepto
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy atentos y carismaticos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelentes
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Súper atentos y bien explicados
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy amables los meseros
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy amables
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                La atención de María José y de Adonai excelente, súper amables y siempre atentos a las necesidades del cliente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                El servicio fue espectacular. El personal que nos atendió (especialmente Rodrigo Montoya) sabía toda la información, me atendió todas mis consultas súper amable y súper pendiente de nosotros todo el tiempo.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy atentos a las necesidades del cliente y a que la mesa esta limpia
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy amables y excelente atencion
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                El personal siempre atento para servir y informar
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy atento el mesero Anthony
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente servicio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Todo excelente Anthony pero tuvo que pedir ayuda para explicar las limonadas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Van muy bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy amable y agradable el mesero
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Stuar fue muy atento a nuestra mesa
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Los chicos super amables y claros, tienen conocimiento de lo que ofrecen.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy atento el mesero y los otros colaboradores.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy buena atención y excelente servicio. El personal fue amable y eficiente.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>9</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy amena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Muy buen servicio al Cliente de Stuar
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Ever tiene un buen servicio añ cliente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Estuvo bien, en ocasiones estaba en rojo y ofrecía
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                En mi opinión, me parece bien que asignen un solo camarero por mesa pero al recibir mucha atención de diferente personal empiezan varias personas a realizar las mismas preguntas, y entre compañeros pierden el control entre lo que ya pudo haber solicitado uno y otro, sin embargo todos atendieron con mucha amabilidad
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Todo bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Un servicio y atención exelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                No me dijeron nada de la experiencia Fogo, solo me dijo que si le diera vuelta al círculo para verde si no me iba a llegar nadie pero de hay en fuera no me dijeron nada
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>1</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios de atención y servicio</span>
+                Falta informar un poco más sobre la experiencia
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        
+        <section id="section-2" class="section-panel">
+            <div class="section-header">
+                <h2>Market Table</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar regular" style="height:13px"
+                         title="Regular: 2"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">9</div>
+                    <div class="bar good" style="height:59px"
+                         title="Bueno: 9"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">25</div>
+                    <div class="bar excellent" style="height:164px"
+                         title="Excelente: 25"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Variedad</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:7px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:39px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">29</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 29"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Frescura</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar regular" style="height:13px"
+                         title="Regular: 2"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">7</div>
+                    <div class="bar good" style="height:46px"
+                         title="Bueno: 7"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">27</div>
+                    <div class="bar excellent" style="height:177px"
+                         title="Excelente: 27"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Presentación</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:7px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">7</div>
+                    <div class="bar good" style="height:46px"
+                         title="Bueno: 7"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">28</div>
+                    <div class="bar excellent" style="height:183px"
+                         title="Excelente: 28"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Calidad general</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>17</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Todo muy rico
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy variado fresco y rico
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Todo fresco y delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Súper organizado,limpio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Much variedad y la presentación de los platos excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente, no tengo palabras
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Perfecto
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente y variado
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy bueno frescos los productos y mucha variedad
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                La mesa de ensaladas excelente, gran variedad y la temperatura estaba super bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Todo estaba súper delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Estaba limpio, organizado sin embargo habían productos de fondo que hacía que se viera sobre cargado sin embargo los alimentos estaban frescos y habían suficientes opciones.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>18</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Bastante bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Variada
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muchos tomates,visualmemte toman mucho espacio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Calidad y atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Ningun comentsrio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                La variedad de los productos es muy buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Gran variedad
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Impresionante selección
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Creo q los aderezos deben de estar al funal
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muy bueno.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Super variada
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Todo bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Muchísima variedad, para todos los gustos. Solo una sugerencia, la coliflor estaba muy salada.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Todo estaba mundial
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>1</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del Market Table</span>
+                Presentación puede mejorar
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        
+        <section id="section-3" class="section-panel">
+            <div class="section-header">
+                <h2>Churrasco</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:7px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">9</div>
+                    <div class="bar good" style="height:59px"
+                         title="Bueno: 9"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">26</div>
+                    <div class="bar excellent" style="height:170px"
+                         title="Excelente: 26"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Frecuencia de cortes</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:7px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:39px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">29</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 29"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Variedad de carnes</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">3</div>
+                    <div class="bar regular" style="height:20px"
+                         title="Regular: 3"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">11</div>
+                    <div class="bar good" style="height:72px"
+                         title="Bueno: 11"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">22</div>
+                    <div class="bar excellent" style="height:144px"
+                         title="Excelente: 22"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Temperatura</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar regular" style="height:13px"
+                         title="Regular: 2"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">9</div>
+                    <div class="bar good" style="height:59px"
+                         title="Bueno: 9"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">25</div>
+                    <div class="bar excellent" style="height:164px"
+                         title="Excelente: 25"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Calidad</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar bad" style="height:7px"
+                         title="Malo: 1"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar regular" style="height:13px"
+                         title="Regular: 2"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">7</div>
+                    <div class="bar good" style="height:46px"
+                         title="Bueno: 7"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">26</div>
+                    <div class="bar excellent" style="height:170px"
+                         title="Excelente: 26"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Presentación al servir</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:7px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:39px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">29</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 29"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Experiencia general</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>13</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Bastante sabroso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente  todos los cortes deliciosos y cocinados perfectos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy rico
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Excelente los términos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Tod esta excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Ese corte estaba súper delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy atentos y cortes deliciosos, creo que el sabor puede mejorar y sería mundial pasar con un par de mariscos.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>19</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy buena y una linda experiencia
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Un par de cortes medio fríos y gomoso después de eso todo exelentes jugosos ricos excelentes términos e intensidades de sabor
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Bien preparado
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Dispuesta a costear la experiencia, lo vale completamente.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Tiempo rapidos y oportunos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                El termino fue el adecuado
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Todo estuvo sobresaliente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                La costilla res dura y pechuga de pollo seca poco sabor
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                La única observación que tengo es que inicialmente nos ofrecían 4 platos de pollo y 1 o 2 de las demás y tuvimos que pedir que nos trajeran Picanya  y &quot;faldinha“.  Se siente como que esconden los buenos cortes que es la queja principal de los rodizhios
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Si se solicita algun término de carne y no lo tienen mejor ser sinceros y ofrecer con el que si cuenten
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy buena l variedad
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Buenas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muchos cortes en muy poco tiempo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Faltó un poco de sal a mi gusto
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                La experiencia muy linda, el servicio muy bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Es algo confuso si el plato pequeño hay que dejarlo o no, la mayoría pedían correrlo. Me parece que es algo peligroso que se resbale la bandeja de metal que usan. Opinión personal solamente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Muy satisfecho con la calidad
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>4</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Para mí gusto algunas carnes sobre todo los rollitos les faltaba cocción
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Los cortes deliciosos, al pollo asada le faltaba sabor
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Algunos cortes estaban frios
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del churrasco</span>
+                Habían cortes frios
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        
+        <section id="section-4" class="section-panel">
+            <div class="section-header">
+                <h2>Ambiente e instalaciones</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">2</div>
+                    <div class="bar bad" style="height:13px"
+                         title="Malo: 2"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">4</div>
+                    <div class="bar regular" style="height:25px"
+                         title="Regular: 4"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">11</div>
+                    <div class="bar good" style="height:70px"
+                         title="Bueno: 11"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">19</div>
+                    <div class="bar excellent" style="height:120px"
+                         title="Excelente: 19"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Música</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">4</div>
+                    <div class="bar regular" style="height:25px"
+                         title="Regular: 4"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">7</div>
+                    <div class="bar good" style="height:44px"
+                         title="Bueno: 7"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">25</div>
+                    <div class="bar excellent" style="height:158px"
+                         title="Excelente: 25"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Mesa</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:6px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:38px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">29</div>
+                    <div class="bar excellent" style="height:184px"
+                         title="Excelente: 29"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Decoración</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar bad" style="height:6px"
+                         title="Malo: 1"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">3</div>
+                    <div class="bar regular" style="height:19px"
+                         title="Regular: 3"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:38px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">26</div>
+                    <div class="bar excellent" style="height:165px"
+                         title="Excelente: 26"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Bar</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:6px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">5</div>
+                    <div class="bar good" style="height:32px"
+                         title="Bueno: 5"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">30</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 30"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Limpieza</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar bad" style="height:6px"
+                         title="Malo: 1"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">3</div>
+                    <div class="bar regular" style="height:19px"
+                         title="Regular: 3"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">7</div>
+                    <div class="bar good" style="height:44px"
+                         title="Bueno: 7"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">25</div>
+                    <div class="bar excellent" style="height:158px"
+                         title="Excelente: 25"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Comodidad</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:6px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">10</div>
+                    <div class="bar good" style="height:63px"
+                         title="Bueno: 10"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">25</div>
+                    <div class="bar excellent" style="height:158px"
+                         title="Excelente: 25"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Ambiente general</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">1</div>
+                    <div class="bar regular" style="height:6px"
+                         title="Regular: 1"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">5</div>
+                    <div class="bar good" style="height:32px"
+                         title="Bueno: 5"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">30</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 30"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Instalaciones</div>
+            </div>
+            
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">3</div>
+                    <div class="bar regular" style="height:19px"
+                         title="Regular: 3"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">4</div>
+                    <div class="bar good" style="height:25px"
+                         title="Bueno: 4"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">29</div>
+                    <div class="bar excellent" style="height:184px"
+                         title="Excelente: 29"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Iluminación</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>15</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Todo muy bien acomodado y lindo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Lindo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy lindo el lugar
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy tranquilo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Super lindo todo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Ordenado y muy limpio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Un lugar agradable y cómodo sin llegar a la ostentación
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Excelente presentación y variedad
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy agradable
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy bonito
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                La luz estaba tenue, perfecta para ese tipo de ambiente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Excelente vista y todo bien ubicado
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy lindo.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>16</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Súper presentable
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Las instalaciones súper lindas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Uno de los mejores restaurantes al que he ido.
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Un aporte se podrían poner porta vasos con el logo de Fogo para las bebidas
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy bueno
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy  acordé al ambiente
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Los sillones no los veo tan comodos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                La mesa a la par de la ventana es incómoda para cuando el gaucho quiere servirle a la persona que está pegada al vidrio
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Decoración muy elegante
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                La
+Música en ocasiones estaba un poco fuerte por lo que tuve que alzar la voz para poder hablar con la otra persona
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy hermoso
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Muy bueno todo la iluminación el también te y la decoración
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Todo impecable
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Las sillas son pesadas, al estar sobre alfombra no es fácil moverse.
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>5</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Mesas muy pegadas tiende a ser un poco incomod cuando pasa la gente al rededor y la música muy alta un par de tonos mas abajo mejor permite disfrutar la experiencia un mas cómodo
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Agradable, música bonita un poco alta, poco espacio entre mesa y mesa
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Poco espacio en los pasillos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Los sillones son un poco incomodos
+            </li>
+            
+            <li>
+                <span class="comment-source">Comentarios del ambiente</span>
+                Considero que en ocasiones la música estaba muy alta, lo que hacía que los acompañantes no él se escucharan cuando hablaban o incluso los meseros cuando traían un producto
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        
+        <section id="section-5" class="section-panel">
+            <div class="section-header">
+                <h2>Experiencia general</h2>
+                <p>Cantidad de respuestas para cada calificación.</p>
+            </div>
+
+            <div class="legend">
+                <span class="legend-swatch verybad"></span>Muy malo (1)
+                <span class="legend-swatch bad"></span>Malo (2)
+                <span class="legend-swatch regular"></span>Regular (3)
+                <span class="legend-swatch good"></span>Bueno (4)
+                <span class="legend-swatch excellent"></span>Excelente (5)
+            </div>
+
+            <div class="chart-area">
+            <div class="metric-group">
+                <div class="bars">
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar verybad" style="height:0px"
+                         title="Muy malo: 0"></div>
+                    <div class="bar-label">Muy malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar bad" style="height:0px"
+                         title="Malo: 0"></div>
+                    <div class="bar-label">Malo</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">0</div>
+                    <div class="bar regular" style="height:0px"
+                         title="Regular: 0"></div>
+                    <div class="bar-label">Regular</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">6</div>
+                    <div class="bar good" style="height:38px"
+                         title="Bueno: 6"></div>
+                    <div class="bar-label">Bueno</div>
+                </div>
+                
+                <div class="bar-item">
+                    <div class="bar-value">30</div>
+                    <div class="bar excellent" style="height:190px"
+                         title="Excelente: 30"></div>
+                    <div class="bar-label">Excelente</div>
+                </div>
+                </div>
+                <div class="metric-label">Experiencia general</div>
+            </div>
+            </div>
+
+            <h2 class="comments-title">Todos los comentarios por sentimiento</h2>
+            <div class="comments-grid">
+            <section class="comment-column positive">
+                <h3>Positivo <span>33</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Desde la entrada hasta el postre en general todo súper bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Excelente atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La comida deliciosa
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Que calidad todo muy bien felicidades
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La comida, la limonada brasileña y definitivamente el personal. Súper amables y atentos.
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención al cliente fue muy agradable, permite recomendar
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención excelente y los cortes de buena calidad
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Los cortes de carne y la limonada de Fogo simplemente deliciosa
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La calidad excelente y ambiente
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Toda la experiencia gastronómica estuvo excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La experiencia fue muy amena, todos estaban muy atentos
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Todos los cortes estaban súper delicioso pero el que más me gustó fue la pikaña
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Musica y porta vasos, por lo demás excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                No tengo opinión, todo esta excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Nada, todo perfecto
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Van por excelente camino
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                En realidad todo estuvo súper bien el tiempo lo dirá
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Especial
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Especial
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Delicioso
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Maravillosa
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Deliciosa
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Deliciosas
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente y fina atencion. Felicidades
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Rico
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excelente
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column neutral">
+                <h3>Neutral <span>63</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                El echo de ver los cortes como los sirven u la información acerca de cada corte
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención el servicio al cliente la forma en que se exponen los platos para ofrecerles muy juena
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Los cortes extravagantes
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención y la comida
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Los cortes de carne
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Picahana
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Cortes
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Los cortes, el ambiente
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Las bebidas
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La amabilidad y el conocimento del personal
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención y la experiencia
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Ambienta y comida
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Recomendacion en bebida
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Todo
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Las comidas
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La variedad de cortes y presentación y las temperaturas
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Exquisita
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Toda la experiencia
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                Elegir de entre tantas opciones y tener la oportunidad de probar todo
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                El lugar y la atención
+            </li>
+            
+            <li>
+                <span class="comment-source">Lo que más disfrutaron</span>
+                La calidad en distintos cortes de carnes
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Bajar un poco ma música solamente después de ahi todo el personal super exelente atención educación y forma la.comida exelente sabor calidad aroma y forma
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Cucharas muy pesadas
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                En la direccion del personal en los gauchos, al atender al cliente
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El orden al entrar al restaurante
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Música
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Laxomunixacion
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Todo bien
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El orden de las mesas
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Talvez por ser el primer día andaban un poco desordenados pero es cuestión de tiempo el acomodo
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Ninguna
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El postre crème brûlée
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El postre más pequeño y más variedad
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Ser mejores cada dia
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El darnos vino
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Todo está exelente
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Todo me gustó
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Más despacio en la explicación, los términos de coción de las carnes
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Ser más receptivos en cuanto a peticiones de clientes
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Detalles, por ejemplo, la factura tiene mal escrito el nombre Guachipelín. 
+Y obviamente es el primer día, pero los elogios en publico y los regaños en privado, no frente a los clientes, por mas primer día.
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El sabor de los cortes
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Placer del buen corte
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Una experiencia súper buena
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Exótico (y agrego, excepcional)
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Extraordinario
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Recomendado
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Volveré muchas veces
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Espectacular
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Exquisita
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Inexplicable
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Espectacular
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Calidad
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Magnífico
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Exquisito
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Exquisita
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Excepcional
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Fascinante
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Si volvería ir con mi pareja
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Extraordinario.
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Exelente atencion
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Satisfactoria
+            </li>
+            </ul>
+            </section>
+            
+            <section class="comment-column negative">
+                <h3>Negativo <span>12</span></h3>
+                <ul>
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Un poco más de atención tal vez
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Las mesas se encuentran muy pegadas
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Menú , muy grande
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                En la organización del personal
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Para mí gusto el termino de cocción de algunas carnes
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Cubiertos menos pesados
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Las cucharas son muy pesadas y el menú es muy grande
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                El agua sabe un poco a cloro
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Quitar sabor de cloro al agua
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                La pechuga de pollo  y todo los cortes de pollo estaban muy seca era incomible se le quedaba pegado de lo seca qué esta menos el muslo de pollo, un corte de res envuelto en tocino no recuerdo el nombre del corte estaba un poco salado, y el cerdo envuelto en tocino estaba también un poco salado
+            </li>
+            
+            <li>
+                <span class="comment-source">Oportunidades de mejora</span>
+                Podrían mejorar la organización del servicio cuando el restaurante está lleno, para que los meseros no se vean tan apresurados y la atención sea más tranquila.
+            </li>
+            
+            <li>
+                <span class="comment-source">Experiencia en una palabra</span>
+                Alta expectativa
+            </li>
+            </ul>
+            </section>
+            </div>
+        </section>
+        </main>
+<script>
+document.querySelectorAll(".tab").forEach((button) => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+        document.querySelectorAll(".section-panel").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        document.getElementById(button.dataset.target).classList.add("active");
+    });
+});
+</script>
+</body>
+</html>
